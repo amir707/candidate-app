@@ -1,19 +1,29 @@
 """Endpoint tests. The governor's reviewer receives per-change coverage
 numbers computed against these tests."""
 
+import json
 import os
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app import chaos
+from app import chaos, flags
 from app.main import app
 
 client = TestClient(app)
+
+_FLAGS_FILE = Path(__file__).resolve().parent.parent / "flags.json"
 
 
 def setup_function() -> None:
     # Each test starts healthy; chaos state is process-global.
     chaos.set_area("payments", False)
+
+
+def _set_flag(name: str, value: bool) -> None:
+    data = json.loads(_FLAGS_FILE.read_text())
+    data[name] = value
+    _FLAGS_FILE.write_text(json.dumps(data))
 
 
 def test_health() -> None:
@@ -28,6 +38,31 @@ def test_payments_summary_healthy() -> None:
     body = resp.json()
     assert body["currency"] == "AUD"
     assert body["transactions"] > 0
+
+
+def test_payments_summary_refund_total_flag_off() -> None:
+    original = flags.enabled("payments_refund_totals")
+    _set_flag("payments_refund_totals", False)
+    try:
+        resp = client.get("/payments/summary")
+        assert resp.status_code == 200
+        assert "refunded_total" not in resp.json()
+    finally:
+        _set_flag("payments_refund_totals", original)
+
+
+def test_payments_summary_refund_total_flag_on() -> None:
+    original = flags.enabled("payments_refund_totals")
+    _set_flag("payments_refund_totals", True)
+    try:
+        resp = client.get("/payments/summary")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "refunded_total" in body
+        assert body["refunded_total"] == 342.75
+        assert body["currency"] == "AUD"
+    finally:
+        _set_flag("payments_refund_totals", original)
 
 
 def test_catalog_items() -> None:
