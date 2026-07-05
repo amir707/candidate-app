@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from app import chaos
 from app.main import app
+from app.payments import SERVICE_FEE_RATE
 
 client = TestClient(app)
 
@@ -28,6 +29,14 @@ def test_payments_summary_healthy() -> None:
     body = resp.json()
     assert body["currency"] == "AUD"
     assert body["transactions"] > 0
+
+
+def test_payments_summary_service_fee() -> None:
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    body = resp.json()
+    expected = round(body["captured_total"] * SERVICE_FEE_RATE, 2)
+    assert body["service_fee"] == expected
 
 
 def test_catalog_items() -> None:
