@@ -36,6 +36,14 @@ def test_catalog_items() -> None:
     assert len(resp.json()["items"]) == 3
 
 
+def test_catalog_items_includes_count() -> None:
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["count"] == len(body["items"])
+    assert body["count"] == 3
+
+
 def test_chaos_requires_token() -> None:
     os.environ["CONFIG_TOKEN"] = "secret-token"
     resp = client.post("/config/chaos", json={"payments": True})
