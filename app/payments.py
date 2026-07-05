@@ -1,5 +1,6 @@
 """Payments area. Files matching app/payments* map to area `payments`
-in sprint-governor's area map; changes here carry payment-path risk."""
+in sprint-governor's area map; changes here carry payment-path risk.
+"""
 
 import random
 
@@ -25,7 +26,8 @@ def payments_summary() -> dict:
         "pending_total": 1201.00,
         "transactions": 214,
     }
-    summary["service_fee"] = round(summary["captured_total"] * SERVICE_FEE_RATE, 2)
+    if flags.enabled("payments_service_fee"):
+        summary["service_fee"] = round(summary["captured_total"] * SERVICE_FEE_RATE, 2)
     if flags.enabled("payments_refund_totals"):
         summary["refunded_total"] = 342.75
     return summary
