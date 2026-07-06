@@ -9,6 +9,8 @@ from app import chaos
 
 router = APIRouter(prefix="/payments")
 
+SERVICE_FEE_RATE = 0.015
+
 
 @router.get("/summary")
 def payments_summary() -> dict:
@@ -17,9 +19,11 @@ def payments_summary() -> dict:
     # as an incident from the outside.
     if chaos.enabled("payments") and random.random() < chaos.FAILURE_RATE:
         raise HTTPException(status_code=500, detail="payments backend error")
+    captured_total = 15734.50
     return {
         "currency": "AUD",
-        "captured_total": 15734.50,
+        "captured_total": captured_total,
         "pending_total": 1201.00,
         "transactions": 214,
+        "service_fee": round(captured_total * SERVICE_FEE_RATE, 2),
     }
