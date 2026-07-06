@@ -36,6 +36,14 @@ def test_catalog_items() -> None:
     assert len(resp.json()["items"]) == 3
 
 
+def test_catalog_items_sorted_by_price_ascending() -> None:
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    prices = [item["price"] for item in resp.json()["items"]]
+    assert prices == sorted(prices)
+    assert prices[0] == 4.50
+
+
 def test_chaos_requires_token() -> None:
     os.environ["CONFIG_TOKEN"] = "secret-token"
     resp = client.post("/config/chaos", json={"payments": True})
