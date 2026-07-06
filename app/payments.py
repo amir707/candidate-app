@@ -10,6 +10,8 @@ from app import flags
 
 router = APIRouter(prefix="/payments")
 
+SERVICE_FEE_RATE = 0.015
+
 
 @router.get("/summary")
 def payments_summary() -> dict:
@@ -23,6 +25,7 @@ def payments_summary() -> dict:
         "captured_total": 15734.50,
         "pending_total": 1201.00,
         "transactions": 214,
+        "service_fee": round(15734.50 * SERVICE_FEE_RATE, 2),
     }
     if flags.enabled("payments_refund_totals"):
         summary["refunded_total"] = 342.75
