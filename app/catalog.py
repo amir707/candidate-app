@@ -15,8 +15,11 @@ _ITEMS = [
 
 @router.get("/items")
 def catalog_items() -> dict:
-    sorted_items = sorted(_ITEMS, key=lambda item: item["price"])
-    body = {"items": sorted_items}
+    if flags.enabled("catalog_items_sorted_by_price"):
+        items = sorted(_ITEMS, key=lambda item: item["price"])
+    else:
+        items = list(_ITEMS)
+    body = {"items": items}
     if flags.enabled("catalog_item_count"):
-        body["count"] = len(sorted_items)
+        body["count"] = len(items)
     return body

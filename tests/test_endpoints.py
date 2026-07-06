@@ -54,7 +54,20 @@ def test_catalog_items() -> None:
     assert len(resp.json()["items"]) == 3
 
 
-def test_catalog_items_sorted_by_price_ascending() -> None:
+def test_catalog_items_unsorted_when_flag_off(monkeypatch) -> None:
+    monkeypatch.setattr(
+        flags, "all_flags", lambda: {"catalog_items_sorted_by_price": False}
+    )
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    skus = [item["sku"] for item in resp.json()["items"]]
+    assert skus == ["MUG-001", "TEA-002", "TEA-001"]
+
+
+def test_catalog_items_sorted_by_price_ascending_when_flag_on(monkeypatch) -> None:
+    monkeypatch.setattr(
+        flags, "all_flags", lambda: {"catalog_items_sorted_by_price": True}
+    )
     resp = client.get("/catalog/items")
     assert resp.status_code == 200
     prices = [item["price"] for item in resp.json()["items"]]
