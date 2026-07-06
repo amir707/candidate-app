@@ -21,6 +21,7 @@ def payments_summary() -> dict:
         raise HTTPException(status_code=500, detail="payments backend error")
     captured_total = 15734.50
     body = {
+    summary = {
         "currency": "AUD",
         "captured_total": captured_total,
         "pending_total": 1201.00,
@@ -29,3 +30,6 @@ def payments_summary() -> dict:
     if flags.enabled("payments_service_fee"):
         body["service_fee"] = round(captured_total * SERVICE_FEE_RATE, 2)
     return body
+    if flags.enabled("payments_refund_totals"):
+        summary["refunded_total"] = 342.75
+    return summary

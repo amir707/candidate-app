@@ -52,6 +52,20 @@ def test_payments_summary_service_fee_flag_on(monkeypatch) -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["service_fee"] == round(body["captured_total"] * 0.015, 2)
+def test_payments_summary_refund_total_flag_off(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: False)
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    assert "refunded_total" not in resp.json()
+
+
+def test_payments_summary_refund_total_flag_on(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: True)
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["refunded_total"] == 342.75
+    assert body["currency"] == "AUD"
 
 
 def test_catalog_items() -> None:
