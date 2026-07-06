@@ -2,6 +2,8 @@
 
 from fastapi import APIRouter
 
+from app import flags
+
 router = APIRouter(prefix="/catalog")
 
 _ITEMS = [
@@ -13,4 +15,7 @@ _ITEMS = [
 
 @router.get("/items")
 def catalog_items() -> dict:
-    return {"items": _ITEMS, "count": len(_ITEMS)}
+    body = {"items": _ITEMS}
+    if flags.enabled("catalog_item_count"):
+        body["count"] = len(_ITEMS)
+    return body
