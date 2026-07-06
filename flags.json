@@ -2,4 +2,6 @@
   "example_flag": false,
   "catalog_item_count": false,
   "payments_service_fee": false
+  "payments_refund_totals": false
+  "catalog_item_count": false
 }
