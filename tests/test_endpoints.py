@@ -1,11 +1,12 @@
 """Endpoint tests. The governor's reviewer receives per-change coverage
 numbers computed against these tests."""
 
+import json
 import os
 
 from fastapi.testclient import TestClient
 
-from app import chaos
+from app import chaos, flags
 from app.main import app
 
 client = TestClient(app)
@@ -14,6 +15,12 @@ client = TestClient(app)
 def setup_function() -> None:
     # Each test starts healthy; chaos state is process-global.
     chaos.set_area("payments", False)
+
+
+def _set_flag(name: str, value: bool) -> None:
+    data = flags.all_flags()
+    data[name] = value
+    flags._FLAGS_FILE.write_text(json.dumps(data))
 
 
 def test_health() -> None:
@@ -30,11 +37,26 @@ def test_payments_summary_healthy() -> None:
     assert body["transactions"] > 0
 
 
-def test_payments_summary_service_fee() -> None:
-    resp = client.get("/payments/summary")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["service_fee"] == round(body["captured_total"] * 0.015, 2)
+def test_payments_summary_service_fee_flag_off() -> None:
+    _set_flag("payments_service_fee", False)
+    try:
+        resp = client.get("/payments/summary")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "service_fee" not in body
+    finally:
+        _set_flag("payments_service_fee", False)
+
+
+def test_payments_summary_service_fee_flag_on() -> None:
+    _set_flag("payments_service_fee", True)
+    try:
+        resp = client.get("/payments/summary")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["service_fee"] == round(body["captured_total"] * 0.015, 2)
+    finally:
+        _set_flag("payments_service_fee", False)
 
 
 def test_catalog_items() -> None:
