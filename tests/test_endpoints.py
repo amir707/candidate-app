@@ -1,5 +1,6 @@
 """Endpoint tests. The governor's reviewer receives per-change coverage
-numbers computed against these tests."""
+numbers computed against these tests.
+"""
 
 import json
 import os
@@ -20,7 +21,29 @@ def setup_function() -> None:
 def test_health() -> None:
     resp = client.get("/health")
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ok"}
+    body = resp.json()
+    assert body["status"] == "ok"
+    assert "version" in body
+    assert "build_time" in body
+
+
+def test_health_defaults_when_env_unset(monkeypatch) -> None:
+    monkeypatch.delenv("APP_VERSION", raising=False)
+    monkeypatch.delenv("BUILD_TIMESTAMP", raising=False)
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body == {"status": "ok", "version": "unknown", "build_time": "unknown"}
+
+
+def test_health_reads_build_metadata_from_env(monkeypatch) -> None:
+    monkeypatch.setenv("APP_VERSION", "1.2.3")
+    monkeypatch.setenv("BUILD_TIMESTAMP", "2024-01-01T00:00:00Z")
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["version"] == "1.2.3"
+    assert body["build_time"] == "2024-01-01T00:00:00Z"
 
 
 def test_payments_summary_healthy() -> None:
@@ -46,6 +69,8 @@ def test_payments_summary_service_fee_flag_on(monkeypatch) -> None:
     body = resp.json()
     assert "service_fee" in body
     assert body["service_fee"] == round(body["captured_total"] * 0.015, 2)
+
+
 def test_payments_summary_refund_total_hidden_when_flag_off(monkeypatch) -> None:
     monkeypatch.setattr(flags, "all_flags", lambda: {"payments_refund_totals": False})
     resp = client.get("/payments/summary")
