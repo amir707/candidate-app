@@ -54,6 +54,24 @@ def test_catalog_items() -> None:
     assert len(resp.json()["items"]) == 3
 
 
+def test_catalog_items_count_flag_off(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: False)
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "count" not in body
+    assert len(body["items"]) == 3
+
+
+def test_catalog_items_count_flag_on(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: True)
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["count"] == len(body["items"])
+    assert body["count"] == 3
+
+
 def test_chaos_requires_token() -> None:
     os.environ["CONFIG_TOKEN"] = "secret-token"
     resp = client.post("/config/chaos", json={"payments": True})
