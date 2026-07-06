@@ -23,8 +23,17 @@ app.include_router(catalog_router)
 @app.get("/health")
 def health() -> dict:
     """Liveness probe. Deliberately independent of chaos state: the
-    monitor derives area health from area endpoints, not from /health."""
-    return {"status": "ok"}
+    monitor derives area health from area endpoints, not from /health.
+
+    Includes build metadata (version, build timestamp) read from
+    environment variables so operators can confirm which build is
+    serving. Safe defaults are used when the env vars are unset.
+    """
+    return {
+        "status": "ok",
+        "version": os.environ.get("APP_VERSION", "unknown"),
+        "build_time": os.environ.get("BUILD_TIMESTAMP", "unknown"),
+    }
 
 
 @app.get("/config/chaos")

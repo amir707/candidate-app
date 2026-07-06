@@ -1,6 +1,7 @@
 {
   "example_flag": false,
-  "payments_refund_totals": false,
   "catalog_item_count": false,
-  "catalog_items_sorted_by_price": false
+  "catalog_items_sorted_by_price": false,
+  "payments_service_fee": false,
+  "payments_refund_totals": false
 }
