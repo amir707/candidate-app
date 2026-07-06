@@ -9,6 +9,8 @@ from app import chaos, flags
 
 router = APIRouter(prefix="/payments")
 
+SERVICE_FEE_RATE = 0.015
+
 
 @router.get("/summary")
 def payments_summary() -> dict:
@@ -23,6 +25,7 @@ def payments_summary() -> dict:
         "pending_total": 1201.00,
         "transactions": 214,
     }
+    summary["service_fee"] = round(summary["captured_total"] * SERVICE_FEE_RATE, 2)
     if flags.enabled("payments_refund_totals"):
         summary["refunded_total"] = 342.75
     return summary
