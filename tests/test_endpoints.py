@@ -7,6 +7,7 @@ import os
 from fastapi.testclient import TestClient
 
 from app import chaos, flags
+from app import payments
 from app.main import app
 
 client = TestClient(app)
@@ -57,6 +58,20 @@ def test_payments_summary_service_fee_flag_on() -> None:
         assert body["service_fee"] == round(body["captured_total"] * 0.015, 2)
     finally:
         _set_flag("payments_service_fee", False)
+def test_payments_summary_refund_total_flag_off(monkeypatch) -> None:
+    monkeypatch.setattr(payments.flags, "enabled", lambda name: False)
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    assert "refunded_total" not in resp.json()
+
+
+def test_payments_summary_refund_total_flag_on(monkeypatch) -> None:
+    monkeypatch.setattr(payments.flags, "enabled", lambda name: True)
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["refunded_total"] == 342.75
+    assert body["currency"] == "AUD"
 
 
 def test_catalog_items() -> None:
