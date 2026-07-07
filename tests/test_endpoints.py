@@ -49,7 +49,16 @@ def test_payments_summary_refund_total_flag_on(monkeypatch) -> None:
 def test_catalog_items() -> None:
     resp = client.get("/catalog/items")
     assert resp.status_code == 200
-    assert len(resp.json()["items"]) == 3
+    body = resp.json()
+    assert len(body["items"]) == 3
+
+
+def test_catalog_items_count() -> None:
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["count"] == len(body["items"])
+    assert body["count"] == 3
 
 
 def test_chaos_requires_token() -> None:
