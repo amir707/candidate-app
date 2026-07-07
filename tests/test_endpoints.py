@@ -30,7 +30,15 @@ def test_payments_summary_healthy() -> None:
     assert body["transactions"] > 0
 
 
-def test_payments_summary_service_fee() -> None:
+def test_payments_summary_service_fee_flag_off(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: False)
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    assert "service_fee" not in resp.json()
+
+
+def test_payments_summary_service_fee_flag_on(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: name == "payments_service_fee")
     resp = client.get("/payments/summary")
     assert resp.status_code == 200
     body = resp.json()

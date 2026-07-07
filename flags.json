@@ -1,4 +1,5 @@
 {
   "example_flag": false,
-  "payments_refund_totals": false
+  "payments_refund_totals": false,
+  "payments_service_fee": false
 }
