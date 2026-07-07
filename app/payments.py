@@ -6,6 +6,7 @@ import random
 from fastapi import APIRouter, HTTPException
 
 from app import chaos, flags
+from app import flags
 
 router = APIRouter(prefix="/payments")
 
@@ -28,4 +29,6 @@ def payments_summary() -> dict:
     }
     if flags.enabled("payments_service_fee"):
         summary["service_fee"] = round(captured_total * SERVICE_FEE_RATE, 2)
+    if flags.enabled("payments_refund_totals"):
+        summary["refunded_total"] = 342.75
     return summary

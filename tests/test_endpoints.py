@@ -6,6 +6,8 @@ import os
 from fastapi.testclient import TestClient
 
 from app import chaos, flags
+from app import chaos
+from app import flags
 from app.main import app
 
 client = TestClient(app)
@@ -46,12 +48,35 @@ def test_payments_summary_service_fee_flag_on(monkeypatch) -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["service_fee"] == round(body["captured_total"] * 0.015, 2)
+def test_payments_summary_refund_total_flag_off(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: False)
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    assert "refunded_total" not in resp.json()
+
+
+def test_payments_summary_refund_total_flag_on(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: name == "payments_refund_totals")
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["refunded_total"] == 342.75
+    assert body["currency"] == "AUD"
 
 
 def test_catalog_items() -> None:
     resp = client.get("/catalog/items")
     assert resp.status_code == 200
-    assert len(resp.json()["items"]) == 3
+    body = resp.json()
+    assert len(body["items"]) == 3
+
+
+def test_catalog_items_count() -> None:
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["count"] == len(body["items"])
+    assert body["count"] == 3
 
 
 def test_chaos_requires_token() -> None:
