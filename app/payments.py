@@ -6,6 +6,7 @@ import random
 from fastapi import APIRouter, HTTPException
 
 from app import chaos
+from app import flags
 
 router = APIRouter(prefix="/payments")
 
@@ -17,9 +18,12 @@ def payments_summary() -> dict:
     # as an incident from the outside.
     if chaos.enabled("payments") and random.random() < chaos.FAILURE_RATE:
         raise HTTPException(status_code=500, detail="payments backend error")
-    return {
+    summary = {
         "currency": "AUD",
         "captured_total": 15734.50,
         "pending_total": 1201.00,
         "transactions": 214,
     }
+    if flags.enabled("payments_refund_totals"):
+        summary["refunded_total"] = 342.75
+    return summary

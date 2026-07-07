@@ -6,6 +6,7 @@ import os
 from fastapi.testclient import TestClient
 
 from app import chaos
+from app import flags
 from app.main import app
 
 client = TestClient(app)
@@ -28,6 +29,22 @@ def test_payments_summary_healthy() -> None:
     body = resp.json()
     assert body["currency"] == "AUD"
     assert body["transactions"] > 0
+
+
+def test_payments_summary_refund_total_flag_off(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: False)
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    assert "refunded_total" not in resp.json()
+
+
+def test_payments_summary_refund_total_flag_on(monkeypatch) -> None:
+    monkeypatch.setattr(flags, "enabled", lambda name: name == "payments_refund_totals")
+    resp = client.get("/payments/summary")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["refunded_total"] == 342.75
+    assert body["currency"] == "AUD"
 
 
 def test_catalog_items() -> None:
