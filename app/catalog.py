@@ -13,4 +13,4 @@ _ITEMS = [
 
 @router.get("/items")
 def catalog_items() -> dict:
-    return {"items": _ITEMS}
+    return {"items": _ITEMS, "count": len(_ITEMS)}
