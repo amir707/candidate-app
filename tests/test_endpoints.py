@@ -1,5 +1,6 @@
 """Endpoint tests. The governor's reviewer receives per-change coverage
-numbers computed against these tests."""
+numbers computed against these tests.
+"""
 
 import os
 
@@ -59,6 +60,14 @@ def test_catalog_items_count() -> None:
     body = resp.json()
     assert body["count"] == len(body["items"])
     assert body["count"] == 3
+
+
+def test_catalog_items_sorted_by_price_ascending() -> None:
+    resp = client.get("/catalog/items")
+    assert resp.status_code == 200
+    prices = [item["price"] for item in resp.json()["items"]]
+    assert prices == sorted(prices)
+    assert prices == [4.50, 5.00, 12.00]
 
 
 def test_chaos_requires_token() -> None:

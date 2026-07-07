@@ -13,4 +13,5 @@ _ITEMS = [
 
 @router.get("/items")
 def catalog_items() -> dict:
-    return {"items": _ITEMS, "count": len(_ITEMS)}
+    sorted_items = sorted(_ITEMS, key=lambda item: item["price"])
+    return {"items": sorted_items, "count": len(sorted_items)}
